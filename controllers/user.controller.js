@@ -1,6 +1,7 @@
 const express = require('express')
 const { UserModel } = require('../models/user.model')
 const nodemailer = require('nodemailer')
+const jwt = require('jsonwebtoken')
 
 
 
@@ -50,15 +51,17 @@ const loginUser = (req, res) =>{
         if(data){
             data.validatePassword(password, (err, isMatch) => {
                 if(isMatch){
-                    res.send({status:true, message:'login sucessfully', data})
+                    const token = jwt.sign({ id:data._id }, process.env.SECRET_KEY, {expiresIn: 60})
+
+                    res.send({status:true, message:'login sucessfully', data, token})
                 }
                 else{
-                    res.send({status:false, message: 'Invalid password'})
+                    res.send({status:false, message: 'Invalid email or password'})
                 }
             })
         }
         else{
-            res.send({status:false, message:'Email not found'}) 
+            res.send({status:false, message:'Invalid email or password'}) 
         }
         
     })
@@ -68,4 +71,33 @@ const loginUser = (req, res) =>{
 
 }
 
-module.exports = {registerUser, loginUser}
+
+const verifyAuth = (req, res) => {
+    let token = req.headers.authorization.split(" ")[1]
+    jwt.verify(token, process.env.SECRET_KEY, (err, decoded)=>{
+        if(err){
+            res.send({status:false, message: 'Invalid token'})
+        }
+        else{
+            id = decoded.id
+            UserModel.findOne({_id:id})
+            .then((data)=>{
+                if(data){
+                    res.send({status:true, message: 'token verified', data: decoded})
+                }else{
+                    res.send({status:false, message: 'Invalid token'})
+                }
+            })
+            .catch((err)=>{
+                res.send({status:false, message: 'Error validating token'})
+            })
+            
+        }
+    })
+
+
+}
+
+
+
+module.exports = {registerUser, loginUser, verifyAuth}
