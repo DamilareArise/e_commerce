@@ -31,4 +31,20 @@ const allProduct = (req, res)=>{
     })
 }
 
-module.exports = { addProduct, allProduct }
+
+const deleteProduct = (req, res) =>{
+
+   let id = req.params.id
+
+   ProductModel.findByIdAndDelete(id)
+   .then((data)=>{
+    res.send({status:true, message:'Product deleted successfully', data})
+   })
+   .catch((err)=>{
+    res.send({status:false, message:'Error occured while deleting product'})
+   })
+
+    
+}
+
+module.exports = { addProduct, allProduct, deleteProduct }
