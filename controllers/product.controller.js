@@ -44,7 +44,19 @@ const deleteProduct = (req, res) =>{
     res.send({status:false, message:'Error occured while deleting product'})
    })
 
-    
 }
 
-module.exports = { addProduct, allProduct, deleteProduct }
+const editProduct = (req, res) =>{
+    let id = req.params.id
+    data = req.body
+    
+    ProductModel.findByIdAndUpdate(id,data,{new:true}) 
+    .then((data)=>{
+        res.send({status:true, message:'Product updated successfully', data})
+    })
+    .catch((err)=>{
+        res.send({status:false, message:'Error occured while updating product'})
+    })
+}
+
+module.exports = { addProduct, allProduct, deleteProduct, editProduct }
