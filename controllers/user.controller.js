@@ -72,30 +72,34 @@ const loginUser = (req, res) =>{
 }
 
 
-const verifyAuth = (req, res) => {
-    let token = req.headers.authorization.split(" ")[1]
-    jwt.verify(token, process.env.SECRET_KEY, (err, decoded)=>{
-        if(err){
-            res.send({status:false, message: 'Invalid token'})
-        }
-        else{
-            id = decoded.id
-            UserModel.findOne({_id:id})
-            .then((data)=>{
-                if(data){
-                    res.send({status:true, message: 'token verified', data: decoded})
-                }else{
-                    res.send({status:false, message: 'Invalid token'})
-                }
-            })
-            .catch((err)=>{
-                res.send({status:false, message: 'Error validating token'})
-            })
-            
-        }
-    })
+const verifyAuth = (req, res, next) => {
+    let token = req.headers.authorization
+    if (token){
+        token = token.split(" ")[1]
+        jwt.verify(token, process.env.SECRET_KEY, (err, decoded)=>{
+            if(err){
+                res.send({status:false, message: 'Invalid token'})
+            }
+            else{
+                id = decoded.id
+                UserModel.findOne({_id:id})
+                .then((data)=>{
+                    if(data){
+                       next()
+                    }else{
+                        res.send({status:false, message: 'Invalid token'})
+                    }
+                })
+                .catch((err)=>{
+                    res.send({status:false, message: 'Error validating token'})
+                })
+                
+            }
+        })
 
-
+    }else{
+        res.send({status:false, message: 'No token provided'})
+    }
 }
 
 
